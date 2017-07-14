@@ -4,6 +4,7 @@ lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'cuke_master/version'
 
+# rubocop:disable BlockLength
 Gem::Specification.new do |spec|
   spec.name          = 'cuke_master'
   spec.version       = CukeMaster::VERSION
@@ -34,10 +35,10 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'bundler', '~> 1.14'
   spec.add_development_dependency 'rake', '~> 10.0'
 
-  spec.add_dependency 'capybara', '~> 2.14.3'
-  spec.add_dependency 'capybara-screenshot', '~> 1.0.14'
-  spec.add_dependency 'cucumber', '~> 2.4.0'
-  spec.add_dependency 'minitest', '~> 5.8.4'
-  spec.add_dependency 'selenium-webdriver', '~> 3.4.3'
-  spec.add_dependency 'activesupport', '~> 5.1.1'
+  spec.add_dependency 'capybara', '~> 2.14'
+  spec.add_dependency 'capybara-screenshot', '~> 1.0'
+  spec.add_dependency 'cucumber', '~> 2.4'
+  spec.add_dependency 'minitest', '~> 5.8'
+  spec.add_dependency 'selenium-webdriver', '~> 3.4'
+  spec.add_dependency 'activesupport', '~> 5.1'
 end
