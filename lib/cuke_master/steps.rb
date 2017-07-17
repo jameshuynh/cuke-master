@@ -292,7 +292,7 @@ Transform(/^\[([^"]*)\]$/) do |string|
   end
 end
 
-# ============== TRANSFORMING =====================
+# 8.1 Transform date & time
 Transform(/^([^"]*) from now( with format ([^"]*))?$/) \
 do |string, _tmp, format|
   number = string.split(' ')[0]
