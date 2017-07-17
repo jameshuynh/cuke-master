@@ -304,7 +304,7 @@ do |string, _tmp, format|
                   '%d-%m-%Y'
                 when 'y-m-d'
                   '%Y-%m-%d'
-                when 'm-d-Y'
+                when 'm-d-y'
                   '%m-%d-%Y'
                 else
                   '%d-%m-%Y'
@@ -321,7 +321,7 @@ do |string, _tmp, format|
                   '%d-%m-%Y'
                 when 'y-m-d'
                   '%Y-%m-%d'
-                when 'm-d-Y'
+                when 'm-d-y'
                   '%m-%d-%Y'
                 else
                   '%d-%m-%Y'
