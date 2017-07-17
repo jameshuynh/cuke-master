@@ -171,8 +171,7 @@ end
 
 # 3.9 Upload a file
 When(/^I attach file to "([^"]*)" with "([^"]*)"$/) do |field_name, file_path|
-  root_folder = File.expand_path('..', File.expand_path(File.dirname(__FILE__)))
-  root_folder = File.expand_path('..', root_folder)
+  root_folder = Dir.pwd
   attach_file field_name, "#{root_folder}/uploads/#{file_path}"
 end
 
@@ -189,8 +188,7 @@ end
 # 3.11 Upload a file
 When(/^I attach file to field with attribute "([^"]*)" value "([^"]*)" with \
 "([^"]*)"$/) do |attribute_name, attribute_value, file_path|
-  root_folder = File.expand_path('..', File.expand_path(File.dirname(__FILE__)))
-  root_folder = File.expand_path('..', root_folder)
+  root_folder = Dir.pwd
   page.execute_script \
     "document
         .querySelector(
