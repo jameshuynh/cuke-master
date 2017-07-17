@@ -109,8 +109,10 @@ box_attribute_name, box_attribute_value, seeable_content|
 end
 
 # 2.9 Click on a special tag with text value
-Then(/^I click on tag "([^"]*)" with text "([^"]*)"$/) do |tag, text|
-  el = first(:xpath, "//#{tag}[text()='#{text}']")
+Then(/^I click on the ([^"]*) "([^"]*)" with text "([^"]*)"$/) \
+do |position, tag, text|
+  pos_number = @pos_number[position.to_sym]
+  el = first(:xpath, "//#{tag}[text()='#{text}'][position()=#{pos_number}]")
   el.click
 end
 
@@ -211,9 +213,11 @@ When(/^I attach file to field with attribute "([^"]*)" value "([^"]*)" with \
               visible: false
 end
 
-#3.12 Fill in a special tag
-When(/^I fill in tag "([^"]*)" with value "([^"]*)"$/) do |tag, value|
-  first(:xpath, ".//#{tag}").set(value)
+# 3.12 Fill in a special tag
+When(/^I fill in ([^"]*) "([^"]*)" with value "([^"]*)"$/) \
+do |position, tag, value|
+  pos_number = @pos_number[position.to_sym]
+  first(:xpath, ".//#{tag}[position()=#{pos_number}]").set(value)
 end
 
 # 4. ========= CHECKING ACTIONS ===========
