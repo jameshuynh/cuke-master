@@ -112,8 +112,9 @@ end
 Then(/^I click on the ([^"]*) "([^"]*)" with text "([^"]*)"$/) \
 do |position, tag, text|
   pos_number = @pos_number[position.to_sym]
-  el = first(:xpath, "//#{tag}[text()='#{text}'][position()=#{pos_number}]")
-  el.click
+  els = all(:xpath, ".//#{tag}[text()='#{text}']")
+  el = els[pos_number - 1]
+  el.set(value)
 end
 
 # 3. ========= FILL FORM ACTIONS ===========
@@ -217,7 +218,9 @@ end
 When(/^I fill in ([^"]*) "([^"]*)" with value "([^"]*)"$/) \
 do |position, tag, value|
   pos_number = @pos_number[position.to_sym]
-  first(:xpath, ".//#{tag}[position()=#{pos_number}]").set(value)
+  els = all(:xpath, ".//#{tag}")
+  el = els[pos_number - 1]
+  el.set(value)
 end
 
 # 4. ========= CHECKING ACTIONS ===========
