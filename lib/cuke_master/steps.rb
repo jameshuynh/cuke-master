@@ -1,10 +1,17 @@
 # rubocop:disable Lint/Debugger, HandleExceptions
+# rubocop:disable BlockLength
+require 'securerandom'
 
 # 1. ========= BROWSE ACTIONS ===========
 # 1.1 Visit a URL
 When(/^I visit the url "([^"]*)"$/) do |url|
   visit url
   @pos_number = {
+    fifth_last: -4,
+    fourthlast: -3,
+    third_last: -2,
+    second_last: -1,
+    last: 0, # 0 - 1 will be -1 in ruby index
     first: 1,
     second: 2,
     third: 3,
@@ -72,20 +79,17 @@ do |position, tag, attribute, attribute_value, seeable_content|
   parent_el = find(:xpath, ".//tr[td[contains(text(), '#{seeable_content}')]]")
   pos_number = @pos_number[position.to_sym]
 
-  el = first(:xpath, "#{parent_el.path}//\
-#{tag}\
-[contains(@#{attribute}, '#{attribute_value}')]\
-[position()=#{pos_number}]")
-  el.click
+  els = all(:xpath, "#{parent_el.path}//\
+#{tag}[contains(@#{attribute}, '#{attribute_value}')]")
+  els[pos_number - 1].click
 end
 
 # 2.7 Click on ordered element
 When(/^I click on the ([^"]*) "([^"]*)" with attribute "([^"]*)" value \
 "([^"]*)"/) do |position, tag, attribute, attribute_value|
   pos_number = @pos_number[position.to_sym]
-  el = first(:xpath, ".//#{tag}[contains(@#{attribute}, '#{attribute_value}')]\
-[position()=#{pos_number}]")
-  el.click
+  els = all(:xpath, ".//#{tag}[contains(@#{attribute}, '#{attribute_value}')]")
+  els[pos_number - 1].click
 end
 
 # 2.8 Click on a tag in the same box as something that I can see
@@ -101,11 +105,10 @@ box_attribute_name, box_attribute_value, seeable_content|
          //*[contains(text(), '#{seeable_content}')]")
 
   pos_number = @pos_number[position.to_sym]
-  el = first(:xpath, "#{parent_el.path}//\
+  els = all(:xpath, "#{parent_el.path}//\
 #{tag}\
-[contains(@#{attribute}, '#{attribute_value}')]\
-[position()=#{pos_number}]")
-  el.click
+[contains(@#{attribute}, '#{attribute_value}')]")
+  els[pos_number - 1].click
 end
 
 # 2.9 Click on a special tag with text value
@@ -175,6 +178,23 @@ attribute "([^"]*)" value "([^"]*)"$/) do |option, attribute, value|
   option.select_option
 end
 
+# 3.7a. Select an option from a dropdown with position box
+# identified by attribute
+When(/^I select "([^"]*)" from ([^"]+) drop down with \
+attribute "([^"]*)" value "([^"]*)"$/) do |option, position, attribute, value|
+  selects = all(:xpath, ".//select[contains(@#{attribute}, '#{value}')]")
+  select = selects[@pos_number[position.to_sym] - 1]
+
+  if select.nil?
+    raise "No such select found with attribute \"#{attribute}\" ~= \"#{value}\""
+  end
+
+  option = select.find(:xpath, "option[contains(text(), '#{option}')]")
+
+  raise "No option found with text #{option}" if option.nil?
+  option.select_option
+end
+
 # 3.8 Select a date in date picker
 # Use the command to fill in a text field
 
@@ -203,15 +223,30 @@ When(/^I attach file to field with attribute "([^"]*)" value "([^"]*)" with \
         .querySelector(
           'input[#{attribute_name}=\"#{attribute_value}\"]'
         ).style.display = 'block';"
-  page.execute_script \
-    "document
-        .querySelector(
-          'input[#{attribute_name}=\"#{attribute_value}\"]'
-        ).name = 'uniqueFieldForCapybara';"
 
-  attach_file 'uniqueFieldForCapybara',
-              "#{root_folder}/uploads/#{file_path}",
-              visible: false
+  el = first(:xpath,
+             ".//input[contains(@#{attribute_name}, '#{attribute_value}')]")
+  unless el
+    raise "No such file field found with \
+attribute \"#{attribute}\" ~= \"#{value}\""
+  end
+
+  if el['name']
+    attach_file el['name'],
+                "#{root_folder}/uploads/#{file_path}",
+                visible: false
+  else
+    # for input without a name, we will create a name
+    unique_name = SecureRandom.uuid
+    page.execute_script \
+      "document
+          .querySelector(
+            'input[#{attribute_name}=\"#{attribute_value}\"]'
+          ).name = 'uploaded_file_#{unique_name}';"
+    attach_file "uploaded_file_#{unique_name}",
+                "#{root_folder}/uploads/#{file_path}",
+                visible: false
+  end
 end
 
 # 3.12 Fill in a special tag
@@ -273,9 +308,11 @@ end
 Then(/^(.*) within ([^"]*) "([^"]*)" with attribute "([^"]*)" value \
 "([^"]*)"/) do |step, position, tag, attribute_name, attribute_value|
   pos_number = @pos_number[position.to_sym]
-  within(:xpath,
-         ".//#{tag}[contains(@#{attribute_name}, '#{attribute_value}')]\
-[position()=#{pos_number}]") do
+  els = all(:xpath,
+            ".//#{tag}[contains(@#{attribute_name}, '#{attribute_value}')]")
+  el = els[pos_number - 1]
+
+  within(:xpath, el.path) do
     step(step)
   end
 end
@@ -343,4 +380,9 @@ do |string, _tmp, format|
                   '%d-%m-%Y'
                 end
   (Date.today - number.to_i.send(unit)).strftime(date_format)
+end
+
+Transform(/^(first|second|third|fourth|fifth) last$/) \
+do |string|
+  "#{string}_last"
 end
