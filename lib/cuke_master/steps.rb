@@ -169,7 +169,11 @@ attribute "([^"]*)" value "([^"]*)"$/) do |option, attribute, value|
   select = first(:xpath, ".//select[contains(@#{attribute}, '#{value}')]")
 
   if select.nil?
-    raise "No such select found with attribute \"#{attribute}\" ~= \"#{value}\""
+    select = first(:xpath, ".//select[contains(@#{attribute}, '#{value}')]",
+                   visible: false)
+    if select.ni?
+      raise "No such select found with attribute \"#{attribute}\" ~= \"#{value}\""
+    end
   end
 
   option = select.find(:xpath, "option[contains(text(), '#{option}')]")
@@ -186,13 +190,37 @@ attribute "([^"]*)" value "([^"]*)"$/) do |option, position, attribute, value|
   select = selects[@pos_number[position.to_sym] - 1]
 
   if select.nil?
-    raise "No such select found with attribute \"#{attribute}\" ~= \"#{value}\""
+    selects = all(:xpath, ".//select[contains(@#{attribute}, '#{value}')]",
+                  visible: false)
+    select = selects[@pos_number[position.to_sym] - 1]
+    if select.nil?
+      raise "No such select found with attribute \"#{attribute}\" ~= \"#{value}\""
+    end
+
+    page.execute_script \
+      "var select =
+        document.evaluate(
+            \"#{select.path}\",
+            document,
+            null,
+            XPathResult.FIRST_ORDERED_NODE_TYPE,
+            null).singleNodeValue;
+      for(let child in select.children) {
+        if(select.children[child].innerHTML == \"#{option}\") {
+          select.children[child].selected = \"selected\";
+        }
+      };
+      var evt = document.createEvent(\"HTMLEvents\");
+      evt.initEvent('change', false, true);
+      select.dispatchEvent(evt);"
+  else
+    option =
+      select
+      .find(:xpath, "option[contains(text(), '#{option}')]")
+
+    raise "No option found with text #{option}" if option.nil?
+    option.select_option
   end
-
-  option = select.find(:xpath, "option[contains(text(), '#{option}')]")
-
-  raise "No option found with text #{option}" if option.nil?
-  option.select_option
 end
 
 # 3.8 Select a date in date picker
@@ -218,20 +246,33 @@ end
 When(/^I attach file to field with attribute "([^"]*)" value "([^"]*)" with \
 "([^"]*)"$/) do |attribute_name, attribute_value, file_path|
   root_folder = Dir.pwd
+
   page.execute_script \
     "document
         .querySelector(
-          'input[#{attribute_name}=\"#{attribute_value}\"]'
+          \"input[#{attribute_name}*='#{attribute_value}']\"
+        ).classList.remove('hide');"
+
+  page.execute_script \
+    "document
+        .querySelector(
+          \"input[#{attribute_name}*='#{attribute_value}']\"
+        ).classList.remove('hidden');"
+
+  page.execute_script \
+    "document
+        .querySelector(
+          \"input[#{attribute_name}*='#{attribute_value}']\"
         ).style.display = 'block';"
 
   el = first(:xpath,
              ".//input[contains(@#{attribute_name}, '#{attribute_value}')]")
   unless el
     raise "No such file field found with \
-attribute \"#{attribute}\" ~= \"#{value}\""
+attribute \"#{attribute_name}\" ~= \"#{attribute_value}\""
   end
 
-  if el['name']
+  if el['name'] && el['name'] != ''
     attach_file el['name'],
                 "#{root_folder}/uploads/#{file_path}",
                 visible: false
@@ -241,7 +282,7 @@ attribute \"#{attribute}\" ~= \"#{value}\""
     page.execute_script \
       "document
           .querySelector(
-            'input[#{attribute_name}=\"#{attribute_value}\"]'
+            'input[#{attribute_name}*=\"#{attribute_value}\"]'
           ).name = 'uploaded_file_#{unique_name}';"
     attach_file "uploaded_file_#{unique_name}",
                 "#{root_folder}/uploads/#{file_path}",
