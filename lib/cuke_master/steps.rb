@@ -1,5 +1,5 @@
-# rubocop:disable Lint/Debugger, HandleExceptions
 # rubocop:disable BlockLength
+# rubocop:disable LineLength
 require 'securerandom'
 
 # 1. ========= BROWSE ACTIONS ===========
@@ -32,14 +32,14 @@ end
 # 2.1 Click on a button or a link
 When(/^I click on "([^"]*)"$/) do |content|
   el = first(:xpath, ".//*[contains(text(), '#{content}')]")
-  el = first(:xpath, ".//*[@value='#{content}']") unless el
+  el ||= first(:xpath, ".//*[@value='#{content}']")
   el.click
 end
 
 # 2.2 Click on a button (in case you have a link with the same display)
 When(/^I click on button "([^"]*)"$/) do |content|
   el = first(:xpath, ".//button[contains(text(), '#{content}')]")
-  el = first(:xpath, ".//input[@value='#{content}']") unless el
+  el ||= first(:xpath, ".//input[@value='#{content}']")
   el.click
 end
 
@@ -58,10 +58,8 @@ When(/^I click on "([^"]*)" with attribute "([^"]*)" value "([^"]*)"$/) \
 do |content, attribute, attribute_value|
   el = first(:xpath, ".//*[contains(text(), '#{content}') and \
 contains(@#{attribute}, '#{attribute_value}')]")
-  unless el
-    el = first(:xpath, ".//input[@value='#{content}' and \
+  el ||= first(:xpath, ".//input[@value='#{content}' and \
 contains(@#{attribute}, '#{attribute_value}')]")
-  end
   el.click
 end
 
@@ -96,8 +94,7 @@ end
 When(/^I click on the ([^"]*) "([^"]*)" with attribute "([^"]*)" value \
 "([^"]*)" within the same box as "([^"]*)" with attribute "([^"]*)" value \
 "([^"]*)" as "([^"]*)"$/) \
-do |position, tag, attribute, attribute_value, box_tag, \
-box_attribute_name, box_attribute_value, seeable_content|
+do |position, tag, attribute, attribute_value, box_tag, box_attribute_name, box_attribute_value, seeable_content|
   parent_el =
     find(:xpath,
          ".//#{box_tag}[contains(@#{box_attribute_name}, \
@@ -379,51 +376,64 @@ value "([^"]*)"$/) do |name, tag, attribute, value|
 end
 
 # ============== TRANSFORMING =====================
-Transform(/^\[([^"]*)\]$/) do |string|
-  val = instance_variable_get("@#{string}")
-  if val
-    val
-  else
-    string
-  end
-end
+ParameterType(
+  name: 'variable',
+  regexp: /^\[([^"]*)\]$/,
+  transformer: lambda { |string|
+    val = instance_variable_get("@#{string}")
+    if val
+      val
+    else
+      string
+    end
+  }
+)
 
 # 8.1 Transform date & time
-Transform(/^([^"]*) from now( with format ([^"]*))?$/) \
-do |string, _tmp, format|
-  number = string.split(' ')[0]
-  unit = string.split(' ')[1]
-  date_format = case format
-                when 'd-m-y'
-                  '%d-%m-%Y'
-                when 'y-m-d'
-                  '%Y-%m-%d'
-                when 'm-d-y'
-                  '%m-%d-%Y'
-                else
-                  '%d-%m-%Y'
-                end
-  (Date.today + number.to_i.send(unit)).strftime(date_format)
-end
+ParameterType(
+  name: 'date',
+  regexp: /^([^"]*) from now( with format ([^"]*))?$/,
+  transformer: lambda { |string, format|
+    number = string.split(' ')[0]
+    unit = string.split(' ')[1]
+    date_format = case format
+                  when 'd-m-y'
+                    '%d-%m-%Y'
+                  when 'y-m-d'
+                    '%Y-%m-%d'
+                  when 'm-d-y'
+                    '%m-%d-%Y'
+                  else
+                    '%d-%m-%Y'
+                  end
+    (Date.today + number.to_i.send(unit)).strftime(date_format)
+  }
+)
 
-Transform(/^([^"]*) prior to now( with format ([^"]*))?$/) \
-do |string, _tmp, format|
-  number = string.split(' ')[0]
-  unit = string.split(' ')[1]
-  date_format = case format
-                when 'd-m-y'
-                  '%d-%m-%Y'
-                when 'y-m-d'
-                  '%Y-%m-%d'
-                when 'm-d-y'
-                  '%m-%d-%Y'
-                else
-                  '%d-%m-%Y'
-                end
-  (Date.today - number.to_i.send(unit)).strftime(date_format)
-end
+ParameterType(
+  name: 'date_before',
+  regexp: /^([^"]*) prior to now( with format ([^"]*))?$/,
+  transformer: lambda { |string, format|
+    number = string.split(' ')[0]
+    unit = string.split(' ')[1]
+    date_format = case format
+                  when 'd-m-y'
+                    '%d-%m-%Y'
+                  when 'y-m-d'
+                    '%Y-%m-%d'
+                  when 'm-d-y'
+                    '%m-%d-%Y'
+                  else
+                    '%d-%m-%Y'
+                  end
+    (Date.today - number.to_i.send(unit)).strftime(date_format)
+  }
+)
 
-Transform(/^(first|second|third|fourth|fifth) last$/) \
-do |string|
-  "#{string}_last"
-end
+ParameterType(
+  name: 'order',
+  regexp: /^(first|second|third|fourth|fifth) last$/,
+  transformer: lambda { |string|
+    "#{string}_last"
+  }
+)

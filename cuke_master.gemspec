@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'capybara', '~> 2.14'
   spec.add_dependency 'capybara-screenshot', '~> 1.0'
-  spec.add_dependency 'cucumber', '~> 2.4'
+  spec.add_dependency 'cucumber', '~> 3.1.0'
   spec.add_dependency 'minitest', '~> 5.8'
   spec.add_dependency 'selenium-webdriver', '~> 3.4'
   spec.add_dependency 'activesupport', '~> 5.1'
