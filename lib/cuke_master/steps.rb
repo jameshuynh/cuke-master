@@ -320,7 +320,7 @@ do |tag, attr_name, attr_value, attr2_name, attr2_value|
   assert el[attr2_name] == attr2_value
 end
 
-# 4.3 Check for checked checkbox
+# 4.4 Check for checked checkbox
 # I should see tag "div" with attribute "id" filled in "james"
 Then(/^I should see checkbox with attribute "([^"]*)" \
 filled with "([^"]*)" "([^"]*)"$/) \
@@ -331,6 +331,14 @@ do |attr_name, attr_value, checked_cond|
   assert !el.nil?
 
   assert el.checked? == (checked_cond == 'checked')
+end
+
+# 4.5 Check for checked checkbox
+# I should see "hello" "6" times
+Then(/^I should see "([^"]*)" "([^"]*)" time\(s\)$/) \
+do |text, number_of_times|
+  el = all(:xpath, ".//*[contains(text(), '#{text}')]")
+  assert el.length == number_of_times.to_i
 end
 
 # 5. ========= MISC ACTIONS ===========
