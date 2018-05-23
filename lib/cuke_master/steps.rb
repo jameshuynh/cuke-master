@@ -307,7 +307,7 @@ Then(/^I should see tag "([^"]*)" with content "([^"]*)"$/) do |tag, content|
   assert page.has_selector?(tag, text: content, visible: true)
 end
 
-# 4.3 Check checkbox checked value
+# 4.3 Check for attribute name vs value
 # I should see tag "div" with attribute "id" filled in "james"
 Then(/^I should see tag "([^"]*)" with attribute "([^"]*)" \
 filled with "([^"]*)" has attribute "([^"]*)" filled with "([^"]*)"$/) \
@@ -318,6 +318,19 @@ do |tag, attr_name, attr_value, attr2_name, attr2_value|
   assert !el.nil?
 
   assert el[attr2_name] == attr2_value
+end
+
+# 4.3 Check for checked checkbox
+# I should see tag "div" with attribute "id" filled in "james"
+Then(/^I should see checkbox with attribute "([^"]*)" \
+filled with "([^"]*)" "([^"]*)"$/) \
+do |attr_name, attr_value, checked_cond|
+  Capybara.ignore_hidden_elements = false
+  el = first(:xpath, ".//input[@#{attr_name}='#{attr_value}']")
+  Capybara.ignore_hidden_elements = true
+  assert !el.nil?
+
+  assert el.checked? == (checked_cond == 'checked')
 end
 
 # 5. ========= MISC ACTIONS ===========
