@@ -32,14 +32,14 @@ end
 # 2.1 Click on a button or a link
 When(/^I click on "([^"]*)"$/) do |content|
   el = first(:xpath, ".//*[contains(text(), '#{content}')]")
-  el = first(:xpath, ".//*[@value='#{content}']") unless el
+  el ||= first(:xpath, ".//*[@value='#{content}']")
   el.click
 end
 
 # 2.2 Click on a button (in case you have a link with the same display)
 When(/^I click on button "([^"]*)"$/) do |content|
   el = first(:xpath, ".//button[contains(text(), '#{content}')]")
-  el = first(:xpath, ".//input[@value='#{content}']") unless el
+  el ||= first(:xpath, ".//input[@value='#{content}']")
   el.click
 end
 
@@ -58,10 +58,8 @@ When(/^I click on "([^"]*)" with attribute "([^"]*)" value "([^"]*)"$/) \
 do |content, attribute, attribute_value|
   el = first(:xpath, ".//*[contains(text(), '#{content}') and \
 contains(@#{attribute}, '#{attribute_value}')]")
-  unless el
-    el = first(:xpath, ".//input[@value='#{content}' and \
+  el ||= first(:xpath, ".//input[@value='#{content}' and \
 contains(@#{attribute}, '#{attribute_value}')]")
-  end
   el.click
 end
 
@@ -96,8 +94,7 @@ end
 When(/^I click on the ([^"]*) "([^"]*)" with attribute "([^"]*)" value \
 "([^"]*)" within the same box as "([^"]*)" with attribute "([^"]*)" value \
 "([^"]*)" as "([^"]*)"$/) \
-do |position, tag, attribute, attribute_value, box_tag, \
-box_attribute_name, box_attribute_value, seeable_content|
+do |position, tag, attribute, attribute_value, box_tag, box_attribute_name, box_attribute_value, seeable_content|
   parent_el =
     find(:xpath,
          ".//#{box_tag}[contains(@#{box_attribute_name}, \
@@ -308,6 +305,19 @@ end
 # 4.2 Advanced checking of content based on html tag
 Then(/^I should see tag "([^"]*)" with content "([^"]*)"$/) do |tag, content|
   assert page.has_selector?(tag, text: content, visible: true)
+end
+
+# 4.3 Check checkbox checked value
+# I should see tag "div" with attribute "id" filled in "james"
+Then(/^I should see tag "([^"]*)" with attribute "([^"]*)" \
+filled with "([^"]*)" has attribute "([^"]*)" filled with "([^"]*)"$/) \
+do |tag, attr_name, attr_value, attr2_name, attr2_value|
+  Capybara.ignore_hidden_elements = false
+  el = first(:xpath, ".//#{tag}[@#{attr_name}='#{attr_value}']")
+  Capybara.ignore_hidden_elements = true
+  assert !el.nil?
+
+  assert el[attr2_name] == attr2_value
 end
 
 # 5. ========= MISC ACTIONS ===========
