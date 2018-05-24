@@ -376,6 +376,13 @@ Then(/^(.*) if available$/) do |step|
   end
 end
 
+Then(/^(.*) in "([^"]*)" second\(s\)$/) do |step, number_of_seconds|
+  current_default_max_wait_time = Capybara.default_max_wait_time
+  Capybara.default_max_wait_time = number_of_seconds.to_i
+  step(step)
+  Capybara.default_max_wait_time = current_default_max_wait_time
+end
+
 # 6.3 within first tag with attribute ... value ...
 Then(/^(.*) within ([^"]*) "([^"]*)" with attribute "([^"]*)" value \
 "([^"]*)"/) do |step, position, tag, attribute_name, attribute_value|
