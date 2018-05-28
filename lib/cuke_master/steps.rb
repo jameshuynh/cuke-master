@@ -1,5 +1,4 @@
-# rubocop:disable Lint/Debugger, HandleExceptions
-# rubocop:disable BlockLength
+
 require 'securerandom'
 
 # 1. ========= BROWSE ACTIONS ===========
@@ -298,47 +297,60 @@ end
 
 # 4. ========= CHECKING ACTIONS ===========
 # 4.1 Check what can be seen on the page
-Then(/^I should see "([^"]*)"$/) do |arg1|
-  assert page.has_content?(arg1)
+Then(/^I should (not )?see "([^"]*)"$/) do |not_word, arg1|
+  assert page.has_content?(arg1) != (not_word.try(:strip) == 'not')
 end
 
 # 4.2 Advanced checking of content based on html tag
-Then(/^I should see tag "([^"]*)" with content "([^"]*)"$/) do |tag, content|
-  assert page.has_selector?(tag, text: content, visible: true)
+Then(/^I should (not )?see tag "([^"]*)" with content "([^"]*)"$/) \
+  do |not_word, tag, content|
+  assert \
+    page.has_selector?(tag, text: content, visible: true) \
+    != (not_word.try(:strip) == 'not')
 end
 
 # 4.3 Check for attribute name vs value
 # I should see tag "div" with attribute "id" filled in "james"
-Then(/^I should see tag "([^"]*)" with attribute "([^"]*)" \
+Then(/^I should (not )?see tag "([^"]*)" with attribute "([^"]*)" \
 filled with "([^"]*)" has attribute "([^"]*)" filled with "([^"]*)"$/) \
-do |tag, attr_name, attr_value, attr2_name, attr2_value|
+do |not_word, tag, attr_name, attr_value, attr2_name, attr2_value|
   Capybara.ignore_hidden_elements = false
   el = first(:xpath, ".//#{tag}[@#{attr_name}='#{attr_value}']")
   Capybara.ignore_hidden_elements = true
-  assert !el.nil?
-
-  assert el[attr2_name] == attr2_value
+  if not_word.try(:strip) != 'not'
+    assert !el.nil?
+    assert el[attr2_name] == attr2_value
+  else
+    assert el.nil? || el[attr2_name] != attr2_value
+  end
 end
 
 # 4.4 Check for checked checkbox
 # I should see tag "div" with attribute "id" filled in "james"
-Then(/^I should see checkbox with attribute "([^"]*)" \
+Then(/^I should (not )?see checkbox with attribute "([^"]*)" \
 filled with "([^"]*)" "([^"]*)"$/) \
-do |attr_name, attr_value, checked_cond|
+do |not_word, attr_name, attr_value, checked_cond|
   Capybara.ignore_hidden_elements = false
   el = first(:xpath, ".//input[@#{attr_name}='#{attr_value}']")
   Capybara.ignore_hidden_elements = true
-  assert !el.nil?
-
-  assert el.checked? == (checked_cond == 'checked')
+  if not_word.try(:strip) != 'not'
+    assert !el.nil?
+    assert el.checked? == (checked_cond == 'checked')
+  else
+    assert el.nil? || el.checked? != (checked_cond == 'checked')
+  end
 end
 
 # 4.5 Check for checked checkbox
 # I should see "hello" "6" times
-Then(/^I should see "([^"]*)" "([^"]*)" time\(s\)$/) \
-do |text, number_of_times|
+Then(/^I should (not )?see "([^"]*)" "([^"]*)" time\(s\)$/) \
+do |not_word, text, number_of_times|
   el = all(:xpath, ".//*[contains(text(), '#{text}')]")
-  assert el.length == number_of_times.to_i
+  if not_word.try(:strip) != 'not'
+    assert el.length == number_of_times.to_i
+  else
+    assert el.length != number_of_times.to_i
+  end
 end
 
 # 5. ========= MISC ACTIONS ===========
